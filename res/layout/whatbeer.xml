@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+android:id="@+id/whatBeerXml"
+android:layout_width="fill_parent"
+android:layout_height="fill_parent"
+android:orientation="vertical"
+xmlns:android="http://schemas.android.com/apk/res/android"
+>
+<TextView
+android:id="@+id/whatBeerText"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="What beer are you having?"
+android:layout_gravity="center"
+android:textSize="20sp"
+>
+</TextView>
+<AutoCompleteTextView
+android:id="@+id/beerName"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_gravity="center"
+android:textSize="20sp"
+android:hint="Beer Name"
+android:width="400dp"
+>
+</AutoCompleteTextView>
+<Button
+android:id="@+id/goButton"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_gravity="center"
+android:textSize="20sp"
+android:text="Go"
+android:width="100dp"
+android:onClick="goClicked"
+>
+</Button>
+</LinearLayout>
