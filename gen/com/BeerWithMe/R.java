@@ -36,6 +36,7 @@ public final class R {
         public static final int searchName=0x7f05000b;
         public static final int shareButton=0x7f050006;
         public static final int shareWithXml=0x7f050008;
+        public static final int surface_camera=0x7f05001f;
         public static final int whatBeerText=0x7f05001c;
         public static final int whatBeerXml=0x7f05001b;
         public static final int whoText=0x7f050009;
