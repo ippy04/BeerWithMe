@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -24,29 +25,54 @@ import org.apache.http.message.BasicNameValuePair;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract.CommonDataKinds;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class shareWith extends Activity{
+public class shareWith extends Activity {
 
+	String mBeerName = null;
+	android.hardware.Camera mCamera = null;
+	byte[] mPicData;
+	
 	/** Called when the activity is first created. */
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.sharewith);
-
+		
+		// try to grab data from global variable
+		BeerWithMeApp appState = (BeerWithMeApp) getApplicationContext();
+        mPicData = appState.camBytes;
+        
+		// grab extras that were passed into this intent
+		Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            mBeerName = extras.getString(whatBeer.EXTRAS_BEER_NAME);
+            mPicData = extras.getByteArray(whatBeer.EXTRAS_PIC_BYTES);
+            
+            // check null pointers
+            if (mBeerName==null)
+            	Log.d("shareWithDebug", "Passed beer name should not be null, please pass correctly from whatBeer");
+            if (mPicData==null)
+            	Log.d("shareWithDebug","mPicData should not be null, please pass correctly from whatBeer");
+            }
+        {
+        	Log.d("shareWithDebug", "shareWith was not passed any extras with the intent... This should not happen");
+        }
 	}
 
 	public void goClicked1(View view){
 		//TODO: managedQuery is depricated
 		//TODO: terrible terrible code, but just wanted to get access to phonebook working
 
-		postFile();
+		postData2();
 		/*
 		String name = "KYle";
 		String selection = ContactsContract.Contacts.IN_VISIBLE_GROUP + " = '" + ("1") + "'";
@@ -137,7 +163,8 @@ public class shareWith extends Activity{
 	}   
 
 	public void postData2(){
-		String xml = "POST -d \"<beer_pic><pic>YEAHHHH2</pic></beer_pic>\" -H \"Content-Type: text/xml\"  http://beerwithme.heroku.com/beer_pics.xml";
+		String xmlold = "POST -d \"<beer_pic><pic>YEAHHHH2</pic></beer_pic>\" -H \"Content-Type: text/xml\"  http://beerwithme.heroku.com/beer_pics.xml";
+		String xml = "POST -d \"<beer_pic><avatar>"+Base64.encodeToString(mPicData, Base64.DEFAULT)+"</avatar><avatar_file_name>BIOTCH222.png</avatar_file_name><user_id>2</user_id><target_number>1234554321</target_number><beer_name>test beer name</beer_name><message>testing message kyle</message></beer_pic>\" -H \"Content-Type: text/xml\"  http://beerwithme.heroku.com/beer_pics.xml";
 		StringEntity se = null;
 		try {
 			se = new StringEntity(xml,"UTF-8");
@@ -204,7 +231,7 @@ public class shareWith extends Activity{
 
 			outputStream = new DataOutputStream( connection.getOutputStream() );
 			outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-			outputStream.writeBytes("Content-Disposition: form-data; name=\"uploadedfile\";filename=\"" + pathToOurFile +"\"" + lineEnd);
+			outputStream.writeBytes("Content-Disposition: form-data; name=\"beer_pic\";filename=\"" + pathToOurFile +"\"" + lineEnd);
 			outputStream.writeBytes(lineEnd);
 
 			bytesAvailable = fileInputStream.available();
@@ -228,6 +255,7 @@ public class shareWith extends Activity{
 			// Responses from the server (code and message)
 			int serverResponseCode = connection.getResponseCode();
 			String serverResponseMessage = connection.getResponseMessage();
+			InputStream serverInputStream = connection.getErrorStream();
 
 			fileInputStream.close();
 			outputStream.flush();

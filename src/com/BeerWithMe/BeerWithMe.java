@@ -16,7 +16,7 @@ public class BeerWithMe extends Activity {
 	// pointers to layout objects
 	ImageView mMainIconObj; 
 	TextView mBeersReviewedObj;
-	
+
 	// preferences actual numbers and keywords
 	long mUserId;
 	Integer mTotalBeers;
@@ -25,7 +25,7 @@ public class BeerWithMe extends Activity {
 
 	// settings
 	SharedPreferences mSettings;
-	
+
 	// intent codes
 	private static final int WHAT_BEER=0;
 
@@ -64,21 +64,21 @@ public class BeerWithMe extends Activity {
 		Intent i = new Intent(this, whatBeer.class);
 		startActivityForResult(i, WHAT_BEER);
 	}
-	
+
 	// when activity is finished we are returned back here
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        
-        switch(requestCode) {
-    	case WHAT_BEER:
-    		if (resultCode == 1){
-    			mTotalBeers++;
-    			Editor ed = mSettings.edit();
-    			ed.putInt(BEERS_REVIEWED, mTotalBeers);
-    			ed.commit();
-    		}
-        }
-    }
+		super.onActivityResult(requestCode, resultCode, intent);
+
+		switch(requestCode) {
+		case WHAT_BEER:
+			if (resultCode == 1){
+				mTotalBeers++;
+				Editor ed = mSettings.edit();
+				ed.putInt(BEERS_REVIEWED, mTotalBeers);
+				ed.commit();
+			}
+		}
+	}
 
 	// function to start thread to grab id from server if we need one
 	void getIdFromServer(){

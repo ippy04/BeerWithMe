@@ -7,7 +7,7 @@
 	<uses-feature android:name="android.hardware.camera" />
 	<uses-feature android:name="android.hardware.camera.autofocus" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<application android:icon="@drawable/icon" android:label="@string/app_name"  android:debuggable="true">
+	<application android:name=".BeerWithMeApp" android:label="@string/app_name"  android:debuggable="true" android:icon="@drawable/beerwithmehomeicon">
 		<activity android:name=".BeerWithMe" android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
