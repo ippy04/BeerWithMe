@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import android.app.Activity;
@@ -12,6 +14,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
 import android.os.AsyncTask;
@@ -23,6 +26,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -35,18 +39,21 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 	private final static int SHARE_WITH = 0;						// code for launching share with activity
 	public static final String EXTRAS_BEER_NAME = "extrasBeerName";	// static variable for BeerName key
 	public static final String EXTRAS_PIC_BYTES = "extrasPicBytes";	// static variable for where camera bytes are stored
-	
+
 	// private variables
 	private android.hardware.Camera mCamera = null;					// camera object
 	private Boolean mPreviewRunning = false;						// boolean if the camera is currently running
 	private Context mCtx = this;									// Context for this activity
-	private byte[] mCamData=null;									// byte array for camera image data
-	
+	private Boolean mTryingToTakePicture = false;					// boolean used by autofocus callback
+	private WidthHeight mMaxWidthHeight = new WidthHeight(600, 600);
+	private WidthHeight mOptimalWidthHeight = new WidthHeight(400, 400);
+
 	// pointers to layout objects
 	private Button mKeepButton; 
 	private Button mGoButton;
 	private Button mRetakeButton;
 	private LinearLayout mBottomLinearLayout;
+	private AutoCompleteTextView mBeerNameView;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -73,109 +80,114 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		}catch (Exception e){
 			e.printStackTrace();
 		}
-		
+
 		// grab pointers to objects
 		mKeepButton = (Button) findViewById(R.id.keepButton);
 		mGoButton = (Button) findViewById(R.id.goButton);
 		mRetakeButton = (Button) findViewById(R.id.retakeButton);
 		mBottomLinearLayout = (LinearLayout) findViewById(R.id.linearLayoutBottom);
+		mBeerNameView = (AutoCompleteTextView) findViewById(R.id.beerName);
 	}
 
+	/** Called when the camera viewing surface is clicked and auto focuses */
+	public void surfaceClicked(View view){
+		//TODO: auto focus on the correct spot instead of just the center
+		mGoButton.setEnabled(false);
+		mCamera.cancelAutoFocus();
+		mCamera.autoFocus(myAutoFocusCallback);
+	}
+
+	/** Simple autofocus callback that re-enables 
+	 * the go button and takes a picture if necessary */
+	private AutoFocusCallback myAutoFocusCallback = new AutoFocusCallback(){
+
+		@Override
+		public void onAutoFocus(boolean arg0, Camera arg1) {
+
+			// if we are trying to take a picture then make 
+			// that callback and tell this class that we are no longer previewing
+			if (mTryingToTakePicture){
+				mCamera.takePicture( null, null, mPictureCallback); 
+				mPreviewRunning = false;
+			}else{
+
+				// enable the go button again if we are not taking a picture
+				mGoButton.setEnabled(true);
+			}
+		}
+	};
+
+	/** Go button clicked. Start autofocus, disable button and then take picture */
 	public void goClicked(View view) {
-		
-		mCamera.takePicture( null, null, mPictureCallback); 
-		mPreviewRunning = false;
-		//Toast.makeText(mCtx, "Saving File", Toast.LENGTH_SHORT).show();
-		//mCamera.takePicture( mShutterCallback, null, mPictureCallback);
-		//new Task().execute();
-		//Intent i = new Intent(mCtx, shareWith.class);
-		//startActivityForResult(i, SHARE_WITH);
 
+		mGoButton.setEnabled(false);
+		mCamera.cancelAutoFocus();
+		mTryingToTakePicture = true;
+		mCamera.autoFocus(myAutoFocusCallback);
 	}
-	
+
+	/** When returned from an activity */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
 	}
-	
+
+	/** create and launch intent to start next window and store beer name */
 	private void launchShareWith(){
-		
-		// create intent to start next string and send data
-		// create intent
 		Intent i = new Intent(mCtx, shareWith.class);
-        i.putExtra(whatBeer.EXTRAS_BEER_NAME, "tmpBeerName");
-        i.putExtra(whatBeer.EXTRAS_PIC_BYTES, mCamData);
-        int kyle = mCamData.length;
-        startActivityForResult(i, SHARE_WITH);
-	}
-	
-	public void keepClicked(View view){
-		// switch views for buttons
-        mBottomLinearLayout.setVisibility(LinearLayout.GONE);
-        mGoButton.setVisibility(Button.VISIBLE);
-		Intent i = new Intent(mCtx, shareWith.class);
+		i.putExtra(whatBeer.EXTRAS_BEER_NAME, mBeerNameView.getText().toString());
 		startActivityForResult(i, SHARE_WITH);
 	}
-	
-	public void retakeClicked(View view){
+
+	/** Reset standard buttons and launch next window */
+	public void keepClicked(View view){
 		// switch views for buttons
-        mBottomLinearLayout.setVisibility(LinearLayout.GONE);
-        mGoButton.setVisibility(Button.VISIBLE);
-        mCamera.startPreview();
-        mPreviewRunning = true;
+		mBottomLinearLayout.setVisibility(LinearLayout.GONE);
+		mGoButton.setVisibility(Button.VISIBLE);
+
+		// launch next window
+		launchShareWith();
 	}
-	
+
+	/** Switch back to standard buttons */
+	public void retakeClicked(View view){
+
+		// switch views for buttons
+		mBottomLinearLayout.setVisibility(LinearLayout.GONE);
+		mGoButton.setVisibility(Button.VISIBLE);
+
+		// start preview again
+		mCamera.startPreview();
+		mPreviewRunning = true;
+	}
+
+	/** callback for taking a picture that saves important camera byte data*/
 	private android.hardware.Camera.PictureCallback mPictureCallback = new android.hardware.Camera.PictureCallback() {
 
 		@Override
 		public void onPictureTaken(byte[] data, android.hardware.Camera camera) {
 
+			// only save data if data is not null
 			if (data != null) {
+
+				// store camera data in global app data
+				BeerWithMeApp appState = (BeerWithMeApp) getApplicationContext();
+				appState.camBytes = data;
+
+				// switch views for buttons
+				mGoButton.setVisibility(Button.GONE);
+				mBottomLinearLayout.setVisibility(LinearLayout.VISIBLE);
+
+				// keep track that we are trying to take a picture
+				mTryingToTakePicture = false;
 				
-				mCamData = data;
-				//launchShareWith();
-				//Intent i = new Intent(mCtx, shareWith.class);
-		        //i.putExtra(whatBeer.extrasBeerName, "tmpBeerName");
-		        //i.putExtra(whatBeer.extrasPicBytes, mCamData);
-		        BeerWithMeApp appState = (BeerWithMeApp) getApplicationContext();
-		        appState.camBytes = data;
-		        
-		        // switch views for buttons
-		        mGoButton.setVisibility(Button.GONE);
-		        mBottomLinearLayout.setVisibility(LinearLayout.VISIBLE);
-		        
-		        
-		        //mCamera.startPreview();
-		        //startActivityForResult(i, SHARE_WITH);
-
-		        /*
-				FileOutputStream outStream = null;
-				File sd = Environment.getExternalStorageDirectory();
-
-				if (!sd.canWrite()){
-					Toast.makeText(mCtx, "Cannot write file to SD card, picture not saved", Toast.LENGTH_LONG).show();
-					return;
-				}
-				try {
-					// write to sdcard
-					File file2 = new File(sd, "tmpfile2.jpg");
-					outStream = new FileOutputStream(String.format(
-							file2.getAbsolutePath()));
-					outStream.write(data);
-					outStream.close();
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				} 
-				catch (Exception e){
-					e.printStackTrace();
-				}finally {
-				}
-				Toast.makeText(mCtx, "Picture Saved", Toast.LENGTH_LONG).show();
-				*/
-			}	
+				// done taking picture, so we can re-enable go button
+				mGoButton.setEnabled(true);
+				
+			// camera not generating any data	
+			}else{
+				Toast.makeText(mCtx, "**Problem ** Camera is not generating any jpeg data", Toast.LENGTH_LONG).show();
+			}
 		}
 	};	
 
@@ -189,28 +201,54 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		// grab default parameters
 		android.hardware.Camera.Parameters params =  mCamera.getParameters();
 
+		// set parameters
 		try{
+			// set orientation
 			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 			mCamera.setDisplayOrientation(90);
-			List <Size> sizes = params.getSupportedPictureSizes();
 			params.setRotation(90);
-			params.setPreviewSize(272, 272);
-			params.setPictureSize(640, 480);
+			
+			// turn on flash
 			params.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+			
+			// get possible preview sizes and image sizes
+			List <Size> sizes = params.getSupportedPictureSizes();
+			List<Size> previewSizes = params.getSupportedPreviewSizes();
+			
+			// get the image size that is closest to our optimal and set it
+			WidthHeight bestWidthHeight = 
+				getBestWidthHeight(sizes, mMaxWidthHeight, mOptimalWidthHeight);
+			if (bestWidthHeight == null){
+				Toast.makeText(this, "Could not find a good camera size", Toast.LENGTH_SHORT).show();
+			}else{
+				params.setPictureSize(bestWidthHeight.width, bestWidthHeight.height);
+			}
+			
+			// get the preview size that is closest to the image size
+			WidthHeight bestWidthHeightPreivew = 
+				getBestWidthHeight(previewSizes, mMaxWidthHeight, bestWidthHeight);
+			if (bestWidthHeightPreivew != null){
+				params.setPreviewSize(bestWidthHeightPreivew.width, bestWidthHeightPreivew.height);
+			}
+			
+			// actually set the  parameters
 			mCamera.setParameters(params);
+			
 		} catch (Exception e){
+			Log.d("whatBeer", e.toString());
 			e.printStackTrace();
 		}
 
-
-
+		// set the previewdisplay holder
 		try {
 			mCamera.setPreviewDisplay(holder);
 
 		} catch (IOException e) {
+			Log.d("whatBeer", e.toString());
 			e.printStackTrace();
 		}
 
+		// start the preview
 		mCamera.startPreview();
 		mPreviewRunning = true;
 	}
@@ -231,4 +269,88 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		mPreviewRunning = false;
 		mCamera.release();
 	}
+	
+	private class WidthHeight{
+		public int width;
+		public int height;
+		
+		WidthHeight(int WIDTH, int HEIGHT){
+			width = WIDTH;
+			height = HEIGHT;
+		}
+	}
+	
+	/** Determine the optimal width and height, based on max size and optimal choice */
+	private WidthHeight getBestWidthHeight(List <Size> sizes, WidthHeight maxWH, WidthHeight optWH){
+
+		// check if none
+		if (sizes.isEmpty())
+			return null;
+		
+		// loop through possible ones and find the ones that are below the max
+		ArrayList <Size> belowMax = new ArrayList<Size>();
+		for (Iterator<Size> it = sizes.iterator (); it.hasNext();) {
+		    Size s = it.next ();
+		    if (s.width <= maxWH.width && s.height <= maxWH.height)
+		    	belowMax.add(s);
+		}
+		
+		// check if none
+		if (belowMax.isEmpty())
+			return null;
+		
+		// function to check optimal is diff(width)^2 + diff(height)^2, and aspect ratio is 10x more important
+		WidthHeight result = new WidthHeight(0, 0);
+		double fitness = 1e12;
+		double tmpFitness;
+		for (Iterator<Size> it = belowMax.iterator (); it.hasNext();) {
+		    Size s = it.next ();
+		    tmpFitness = (double) Math.sqrt(Math.pow(s.width - optWH.width, 2) + 
+		    			 Math.pow(s.height - optWH.height, 2))/(optWH.height*.5+optWH.width*.5)+
+		    			 Math.abs((double)optWH.width/optWH.height - (double)s.width/s.height)*10;
+		    if (tmpFitness < fitness){
+		    	fitness = tmpFitness;
+		    	result.width = s.width;
+		    	result.height = s.height;
+		    }
+		}
+		
+		// check if nothing matched
+		if (result.width == 0 && result.height == 0)
+			result = null;
+		
+		// return result
+		return result;
+		
+	}
 }
+
+//mCamera.startPreview();
+//startActivityForResult(i, SHARE_WITH);
+
+/*
+FileOutputStream outStream = null;
+File sd = Environment.getExternalStorageDirectory();
+
+if (!sd.canWrite()){
+	Toast.makeText(mCtx, "Cannot write file to SD card, picture not saved", Toast.LENGTH_LONG).show();
+	return;
+}
+try {
+	// write to sdcard
+	File file2 = new File(sd, "tmpfile2.jpg");
+	outStream = new FileOutputStream(String.format(
+			file2.getAbsolutePath()));
+	outStream.write(data);
+	outStream.close();
+} catch (FileNotFoundException e) {
+	e.printStackTrace();
+} catch (IOException e) {
+	e.printStackTrace();
+} 
+catch (Exception e){
+	e.printStackTrace();
+}finally {
+}
+Toast.makeText(mCtx, "Picture Saved", Toast.LENGTH_LONG).show();
+ */

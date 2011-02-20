@@ -1,78 +1,84 @@
 package com.BeerWithMe;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-
 import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
-import android.hardware.Camera;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.Toast;
 
 public class shareWith extends Activity {
 
-	String mBeerName = null;
 	android.hardware.Camera mCamera = null;
 	byte[] mPicData;
-	
+	private String mUserId="2";
+	private String mTargetNumber = "3109800919";
+	private String mAvatarFileName = "testing.png";
+	private String mBeerName = null;
+	private String mMessage = "Drink up Bitches!!";
+	private String mUrl = "beerwithme.heroku.com/beer_pics.xml";
+	private Context mCtx = this;
+	private Boolean mImagePosted = false;
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.sharewith);
-		
+
 		// try to grab data from global variable
 		BeerWithMeApp appState = (BeerWithMeApp) getApplicationContext();
-        mPicData = appState.camBytes;
-        
+		mPicData = appState.camBytes;
+
 		// grab extras that were passed into this intent
 		Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            mBeerName = extras.getString(whatBeer.EXTRAS_BEER_NAME);
-            mPicData = extras.getByteArray(whatBeer.EXTRAS_PIC_BYTES);
-            
-            // check null pointers
-            if (mBeerName==null)
-            	Log.d("shareWithDebug", "Passed beer name should not be null, please pass correctly from whatBeer");
-            if (mPicData==null)
-            	Log.d("shareWithDebug","mPicData should not be null, please pass correctly from whatBeer");
-            }
-        {
-        	Log.d("shareWithDebug", "shareWith was not passed any extras with the intent... This should not happen");
-        }
+		if (extras != null) {
+			mBeerName = extras.getString(whatBeer.EXTRAS_BEER_NAME);
+
+			// check null pointers
+			if (mBeerName==null){
+				mBeerName = "Null Beer Name - Should not happen";
+				Log.d("shareWithDebug", "Passed beer name should not be null, please pass correctly from whatBeer");
+			}
+			if (mPicData==null)
+				Log.d("shareWithDebug","mPicData should not be null, please pass correctly from whatBeer");
+		}else{
+			Log.d("shareWithDebug", "shareWith was not passed any extras with the intent... This should not happen");
+		}
+		
+		// error checking
+		if (mBeerName==null){
+			mBeerName = "Null Beer Name - Should not happen";
+			Log.d("shareWithDebug", "Passed beer name should not be null, please pass correctly from whatBeer");
+		}
+		if (mBeerName.length()==0)
+			mBeerName = "No Beer Entered!!!";
 	}
 
 	public void goClicked1(View view){
-		//TODO: managedQuery is depricated
-		//TODO: terrible terrible code, but just wanted to get access to phonebook working
+		//TODO: managedQuery is @deprecated
+		//TODO: should not be posting data with this button click
 
-		postData2();
+		// grab phone number
+		AutoCompleteTextView whoText = (AutoCompleteTextView) findViewById(R.id.searchName);
+		mTargetNumber = whoText.getText().toString();
+		postDataUsingAsync();
 		/*
 		String name = "KYle";
 		String selection = ContactsContract.Contacts.IN_VISIBLE_GROUP + " = '" + ("1") + "'";
@@ -101,11 +107,11 @@ public class shareWith extends Activity {
 		int kyle2 = 6;
 		 */
 	}
-	
+
 	public void goClicked2(View view){
 
 	}
-	
+
 	private ArrayList<String> getPhoneNumbers(String id) 
 	{
 		ArrayList<String> phones = new ArrayList<String>();
@@ -124,148 +130,100 @@ public class shareWith extends Activity {
 		cursor.close();
 		return(phones);
 	}
-	
 
-	public void postData() {  
-		// Create a new HttpClient and Post Header  
-		HttpClient httpclient = new DefaultHttpClient();  
-		HttpPost httppost = new HttpPost("http://beerwithme.heroku.com/beer_pics");  
-		String response=null;
-		ResponseHandler <String> res=new BasicResponseHandler();
+	/** Asynctask for posting data to server */
+	private class postDataTask extends AsyncTask<Void, Void, PostResult>{
 
-		try {  
-
-			// grab strings
-			EditText Text1 = (EditText)findViewById(R.id.firstName);
-			String string1 = Text1.getText().toString();
-			EditText Text2 = (EditText)findViewById(R.id.phoneNumber);
-			String string2 = Text2.getText().toString();
-
-			// Add your data  
-			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);    
-			nameValuePairs.add(new BasicNameValuePair("beer_pic", "<pic>Test</pic>"));  
-			//nameValuePairs.add(new BasicNameValuePair(string1, string2));  
-
-			//httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-
-			// Execute HTTP Post Request  
-			response = httpclient.execute(httppost, res); 
-			Log.d("tag", response);
-			Log.d("tag2", httppost.getEntity().toString());
-
-		} catch (ClientProtocolException e) {   
-			e.printStackTrace();
-		} catch (IOException e) {  
-			e.printStackTrace();
+		@Override
+		protected void onPreExecute() {
+			Toast.makeText(mCtx, "Sending Image", Toast.LENGTH_LONG).show();
 		}
-		Toast.makeText(this, "Your post was successfully uploaded", Toast.LENGTH_LONG).show();
-	}   
 
-	public void postData2(){
-		String xmlold = "POST -d \"<beer_pic><pic>YEAHHHH2</pic></beer_pic>\" -H \"Content-Type: text/xml\"  http://beerwithme.heroku.com/beer_pics.xml";
-		String xml = "POST -d \"<beer_pic><avatar>"+Base64.encodeToString(mPicData, Base64.DEFAULT)+"</avatar><avatar_file_name>BIOTCH222.png</avatar_file_name><user_id>2</user_id><target_number>1234554321</target_number><beer_name>test beer name</beer_name><message>testing message kyle</message></beer_pic>\" -H \"Content-Type: text/xml\"  http://beerwithme.heroku.com/beer_pics.xml";
-		StringEntity se = null;
-		try {
-			se = new StringEntity(xml,"UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		se.setContentType("text/xml");
-		HttpPost postRequest = new HttpPost("http://beerwithme.heroku.com/beer_pics.xml");
-		postRequest.setEntity(se);
-
-		HttpClient httpclient = new DefaultHttpClient();  
-		String response=null;
-		ResponseHandler <String> res=new BasicResponseHandler();
-		// Execute HTTP Post Request  
-		try {
-			response = httpclient.execute(postRequest, res);
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		Log.d("tag", response);
-		Log.d("tag2", postRequest.getEntity().toString());
-	}
-
-	public void postFile(){
-		HttpURLConnection connection = null;
-		DataOutputStream outputStream = null;
-		DataInputStream inputStream = null;
-
-		File sd = Environment.getExternalStorageDirectory();
-		File picFile = new File(sd, "DCIM/100MEDIA/IMAG0536.jpg");		
-
-		String pathToOurFile = picFile.getAbsolutePath();
-		String urlServer = "http://beerwithme.heroku.com/beer_pics.xml";
-		String lineEnd = "\r\n";
-		String twoHyphens = "--";
-		String boundary =  "*****";
-
-		int bytesRead, bytesAvailable, bufferSize;
-		byte[] buffer;
-		int maxBufferSize = 1*1024*1024;
-
-		try
-		{
-			FileInputStream fileInputStream = new FileInputStream(new File(pathToOurFile) );
-
-			URL url = new URL(urlServer);
-			connection = (HttpURLConnection) url.openConnection();
-
-			// Allow Inputs & Outputs
-			connection.setDoInput(true);
-			connection.setDoOutput(true);
-			connection.setUseCaches(false);
-
-			// Enable POST method
-			connection.setRequestMethod("POST");
-
-			connection.setRequestProperty("Connection", "Keep-Alive");
-			connection.setRequestProperty("Content-Type", "multipart/form-data;boundary="+boundary);
-
-			outputStream = new DataOutputStream( connection.getOutputStream() );
-			outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-			outputStream.writeBytes("Content-Disposition: form-data; name=\"beer_pic\";filename=\"" + pathToOurFile +"\"" + lineEnd);
-			outputStream.writeBytes(lineEnd);
-
-			bytesAvailable = fileInputStream.available();
-			bufferSize = Math.min(bytesAvailable, maxBufferSize);
-			buffer = new byte[bufferSize];
-
-			// Read file
-			bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
-			while (bytesRead > 0)
-			{
-				outputStream.write(buffer, 0, bufferSize);
-				bytesAvailable = fileInputStream.available();
-				bufferSize = Math.min(bytesAvailable, maxBufferSize);
-				bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+		@Override
+		protected PostResult doInBackground(Void... arg0) {
+			
+			// the result if successful or not
+			Boolean result = true;
+			
+			// xml String to post to server
+			String xml = "POST -d <?xml version='1.0' encoding='UTF-8'?>" +
+			"<beer_pic><user_id>"+mUserId+"</user_id><avatar type='String'>" +
+			Base64.encodeToString(mPicData, Base64.DEFAULT) +
+			"</avatar><avatar_file_name>"+mAvatarFileName+"</avatar_file_name>" +
+			"<target_number>"+mTargetNumber+"</target_number>" +
+			"<beer_name>"+mBeerName+"</beer_name>" +
+			"<message>"+mBeerName+"</message></beer_pic> " +
+			"-H \"Content-Type: text/xml\"  "+mUrl;
+			
+			// default response
+			String response="No Response From Server";
+			
+			// initialize string to be sent to server
+			StringEntity se = null;
+			try {
+				se = new StringEntity(xml,"UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
 			}
+			
+			// set the type of text and what server to send to
+			se.setContentType("text/xml");
+			HttpPost postRequest = new HttpPost("http://"+mUrl);
+			postRequest.setEntity(se);
 
-			outputStream.writeBytes(lineEnd);
-			outputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-			// Responses from the server (code and message)
-			int serverResponseCode = connection.getResponseCode();
-			String serverResponseMessage = connection.getResponseMessage();
-			InputStream serverInputStream = connection.getErrorStream();
-
-			fileInputStream.close();
-			outputStream.flush();
-			outputStream.close();
+			// create http client and response handler
+			HttpClient httpclient = new DefaultHttpClient();  
+			ResponseHandler <String> res=new BasicResponseHandler();
+			
+			// Execute HTTP Post Request  
+			try {
+				response = httpclient.execute(postRequest, res);
+			} catch (ClientProtocolException e) {
+				response = e.toString();
+				result = false;
+			} catch (IOException e) {
+				result = false;
+				response = e.toString();
+			} 
+			
+			// print toast if error
+			if (response=="No Response From Server"){
+				result = false;
+			}
+			
+			// store data to log
+			Log.d("tag", response);
+			Log.d("tag2", postRequest.getEntity().toString());
+			
+			// return result
+			PostResult postResult = new PostResult(result, response);
+			return postResult;
 		}
-		catch (Exception ex)
-		{
-			int kyle4 = 6;
-			//Exception handling
+
+		@Override
+		protected void onPostExecute(PostResult result) {
+			if (result.result){
+				Toast.makeText(mCtx, "Image Sent Successfully", Toast.LENGTH_SHORT).show();
+			}else{
+				Toast.makeText(mCtx, "Image Could Not be Posted because "+result.response, Toast.LENGTH_LONG).show();
+			}
+			mImagePosted = result.result;
 		}
-		int kyle5 = 6;
+	}
+	
+	private class PostResult{
+		public Boolean result;
+		public String response;
+		
+		PostResult(Boolean RESULT, String RESPONSE){
+			result = RESULT;
+			response = RESPONSE;
+			
+		}
+	}
+	
+	// post data to server
+	public void postDataUsingAsync(){
+		new postDataTask().execute();
 	}
 }

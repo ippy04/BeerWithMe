@@ -29,6 +29,7 @@ android:width="400dp"
 android:layout_width="fill_parent"
 android:layout_height="10dip"
 android:layout_weight="1"
+android:onClick="surfaceClicked"
 >
 </SurfaceView>
 <Button
