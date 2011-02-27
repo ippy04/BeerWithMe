@@ -3,6 +3,7 @@
 	<name>BeerWithMe</name>
 	<comment></comment>
 	<projects>
+		<project>custom.utils</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

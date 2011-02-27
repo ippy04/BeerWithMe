@@ -28,8 +28,8 @@ android:width="400dp"
 <SurfaceView android:id="@+id/surface_camera"
 android:layout_width="fill_parent"
 android:layout_height="10dip"
-android:layout_weight="1"
 android:onClick="surfaceClicked"
+android:layout_weight = "1"
 >
 </SurfaceView>
 <Button
@@ -41,6 +41,7 @@ android:textSize="20sp"
 android:text="Go"
 android:width="100dp"
 android:onClick="goClicked"
+android:visibility="gone"
 >
 </Button>
 <LinearLayout

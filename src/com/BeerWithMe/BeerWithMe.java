@@ -1,12 +1,31 @@
 package com.BeerWithMe;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import com.tools.SuccessReason;
+import com.tools.*;
+
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,6 +41,7 @@ public class BeerWithMe extends Activity {
 	Integer mTotalBeers;
 	private static final String BEERS_REVIEWED = "beerReviewed";
 	private static final String USER_ID = "userId";
+	private String mUrl = "beerwithme.heroku.com/auth.xml";
 
 	// settings
 	SharedPreferences mSettings;
@@ -51,12 +71,15 @@ public class BeerWithMe extends Activity {
 
 		// grab user ID
 		mUserId = mSettings.getLong(USER_ID, -1);
-		if (mUserId == -1)
+		//if (mUserId == -1)
 			getIdFromServer();
 
 		// set background color
 		View mlayout = (View) findViewById(R.id.main);
 		mlayout.setBackgroundColor(Color.BLUE);
+
+		// test
+		String number = Tools.getMyStrippedPhoneNumber(this);
 	}
 
 	// Open next page when share is clicked
@@ -103,6 +126,7 @@ public class BeerWithMe extends Activity {
 	private class getIdFromServerTask extends AsyncTask<Integer, Integer, Long> {
 		protected Long doInBackground(Integer...inputs) {
 			//TODO: write get command to get user ID from server
+			requestSecret();
 			return (long) 1;
 		}
 
@@ -114,5 +138,69 @@ public class BeerWithMe extends Activity {
 		protected void onPostExecute(Long result) {
 			mUserId = result;
 		}
+	}  
+
+	// grab user name and password
+	protected SuccessReason requestSecret(){
+		Boolean result = true;
+
+		// get phone number
+		String phone = com.tools.Tools.getMyStrippedPhoneNumber(this);
+		if (phone==null)
+			phone = requestPhoneFromUser();
+
+		// xml String to post to server
+		String xml = "GET -d <?xml version='1.0' encoding='UTF-8'?>" +
+		"<user><phone_number>"+phone+"</phone_number></user> " +
+		"-H \"Content-Type: text/xml\"  "+mUrl;
+
+		// default response
+		String response="No Response From Server";
+
+		// initialize string to be sent to server
+		StringEntity se = null;
+		try {
+			se = new StringEntity(xml,"UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+
+		// set the type of text and what server to send to
+		se.setContentType("text/xml");
+		HttpPost getRequest = new HttpPost("http://"+mUrl);
+		getRequest.setEntity(se);
+
+		// create http client and response handler
+		HttpClient httpclient = new DefaultHttpClient();  
+		ResponseHandler <String> res=new BasicResponseHandler();
+
+		// Execute HTTP Post Request  
+		try {
+			response = httpclient.execute(getRequest, res);
+		} catch (ClientProtocolException e) {
+			response = e.toString();
+			result = false;
+		} catch (IOException e) {
+			result = false;
+			response = e.toString();
+		} 
+
+		// print toast if error
+		if (response=="No Response From Server"){
+			result = false;
+		}
+
+		// store data to log
+		Log.d("tag", response);
+		//Log.d("tag2", getRequest.getEntity().toString());
+
+		// return result
+		SuccessReason getResult = new SuccessReason(result, response);
+		return getResult;
+	}
+
+	protected String requestPhoneFromUser(){
+		//TODO: actually request user phone number instead of hard code
+		return "2345678910";
 	}
 }

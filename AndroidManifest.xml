@@ -8,14 +8,14 @@
 	<uses-feature android:name="android.hardware.camera.autofocus" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	<application android:name=".BeerWithMeApp" android:label="@string/app_name"  android:debuggable="true" android:icon="@drawable/beerwithmehomeicon">
-		<activity android:name=".BeerWithMe" android:label="@string/app_name">
+		<activity android:name=".BeerWithMe" android:label="@string/app_name" android:theme="@android:style/Theme.NoTitleBar">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name=".whatBeer" />
-		<activity android:name=".shareWith" />
+		<activity android:name=".whatBeer" android:theme="@android:style/Theme.NoTitleBar"/>
+		<activity android:name=".shareWith" android:theme="@android:style/Theme.NoTitleBar"/>
 
 	</application>
 </manifest> 

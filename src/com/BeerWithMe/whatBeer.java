@@ -1,12 +1,11 @@
 package com.BeerWithMe;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import com.tools.*;
 
 import android.app.Activity;
 import android.content.Context;
@@ -15,11 +14,8 @@ import android.content.pm.ActivityInfo;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
-import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -28,9 +24,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class whatBeer extends Activity implements SurfaceHolder.Callback{
@@ -63,13 +57,9 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		// setup surface for holding camera
 		try{
 			getWindow().setFormat(PixelFormat.TRANSLUCENT);
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-					WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
+			
 			setContentView(R.layout.whatbeer);
 			SurfaceView mSurfaceView = (SurfaceView) findViewById(R.id.surface_camera);
-
 
 			SurfaceHolder mSurfaceHolder = mSurfaceView.getHolder();
 
@@ -80,7 +70,7 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		}catch (Exception e){
 			e.printStackTrace();
 		}
-
+		
 		// grab pointers to objects
 		mKeepButton = (Button) findViewById(R.id.keepButton);
 		mGoButton = (Button) findViewById(R.id.goButton);
@@ -194,6 +184,11 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
+		
+		// turn off go button, will turn back on when done
+		mGoButton.setVisibility(Button.INVISIBLE);
+		
+		// stop the preview
 		if (mPreviewRunning)
 			if (mCamera != null)
 				mCamera.stopPreview();
@@ -227,8 +222,13 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 			// get the preview size that is closest to the image size
 			WidthHeight bestWidthHeightPreivew = 
 				getBestWidthHeight(previewSizes, mMaxWidthHeight, bestWidthHeight);
+			
+			// determine how best to fit camera preview into surface
 			if (bestWidthHeightPreivew != null){
 				params.setPreviewSize(bestWidthHeightPreivew.width, bestWidthHeightPreivew.height);
+				WidthHeight fitWindowWidthHeight = Tools.fitNoCrop(bestWidthHeightPreivew, new WidthHeight(width, height));
+				SurfaceView mSurfaceView = (SurfaceView) findViewById(R.id.surface_camera);
+				mSurfaceView.setLayoutParams(new LinearLayout.LayoutParams(fitWindowWidthHeight.width, fitWindowWidthHeight.height, (float) 0.0));
 			}
 			
 			// actually set the  parameters
@@ -251,6 +251,9 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		// start the preview
 		mCamera.startPreview();
 		mPreviewRunning = true;
+		
+		// turn go button back on
+		mGoButton.setVisibility(Button.VISIBLE);
 	}
 
 	@Override
@@ -268,16 +271,6 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		mCamera.stopPreview();
 		mPreviewRunning = false;
 		mCamera.release();
-	}
-	
-	private class WidthHeight{
-		public int width;
-		public int height;
-		
-		WidthHeight(int WIDTH, int HEIGHT){
-			width = WIDTH;
-			height = HEIGHT;
-		}
 	}
 	
 	/** Determine the optimal width and height, based on max size and optimal choice */

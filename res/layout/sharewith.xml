@@ -17,17 +17,18 @@ android:textSize="20sp"
 </TextView>
 <LinearLayout
 android:id="@+id/line1"
-android:layout_width="wrap_content"
+android:layout_width="fill_parent"
 android:layout_height="wrap_content"
 android:orientation="horizontal"
 >
 <AutoCompleteTextView
 android:id="@+id/searchName"
-android:layout_width="wrap_content"
+android:layout_width="fill_parent"
 android:layout_height="wrap_content"
 android:textSize="20sp"
 android:hint="Search Contacts"
-android:width="200dp"
+android:clickable="true"
+android:layout_weight="1"
 >
 </AutoCompleteTextView>
 <Button
@@ -35,12 +36,19 @@ android:id="@+id/goButton1"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:textSize="20sp"
-android:text="Go"
 android:width="100dp"
+android:text="Go"
 android:onClick="goClicked1"
+android:layout_gravity="center"
 >
 </Button>
 </LinearLayout>
+<!-- Set height to 0, and let the weight param expand it -->
+<!-- Note the use of the default ID! This lets us use a ListActivity still! -->
+<ListView android:id="@+id/android:list" 
+android:layout_width="fill_parent"
+android:layout_height="0dip"
+android:layout_weight="1" />
 <TextView
 android:id="@+id/orText"
 android:layout_width="wrap_content"
@@ -48,6 +56,7 @@ android:layout_height="wrap_content"
 android:text="OR"
 android:textSize="20sp"
 android:layout_gravity="center"
+android:visibility="gone"
 >
 </TextView>
 <LinearLayout
@@ -55,6 +64,7 @@ android:id="@+id/line2"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:orientation="horizontal"
+android:visibility="gone"
 >
 <TextView
 android:id="@+id/addText"
