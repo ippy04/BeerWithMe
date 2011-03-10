@@ -5,6 +5,7 @@ android:layout_width="fill_parent"
 android:layout_height="fill_parent"
 android:orientation="vertical"
 xmlns:android="http://schemas.android.com/apk/res/android"
+android:background="@color/listViewColor"
 >
 <TextView
 android:id="@+id/whoText"
@@ -29,6 +30,8 @@ android:textSize="20sp"
 android:hint="Search Contacts"
 android:clickable="true"
 android:layout_weight="1"
+android:lines="1"
+android:scrollHorizontally="true"
 >
 </AutoCompleteTextView>
 <Button
@@ -48,7 +51,8 @@ android:layout_gravity="center"
 <ListView android:id="@+id/android:list" 
 android:layout_width="fill_parent"
 android:layout_height="0dip"
-android:layout_weight="1" />
+android:layout_weight="1" 
+android:cacheColorHint="@color/listViewColor"/>
 <TextView
 android:id="@+id/orText"
 android:layout_width="wrap_content"

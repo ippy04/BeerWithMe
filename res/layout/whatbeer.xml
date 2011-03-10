@@ -5,6 +5,7 @@ android:layout_width="fill_parent"
 android:layout_height="fill_parent"
 android:orientation="vertical"
 xmlns:android="http://schemas.android.com/apk/res/android"
+android:background="@drawable/backrepeat"
 >
 <TextView
 android:id="@+id/whatBeerText"
@@ -13,6 +14,7 @@ android:layout_height="wrap_content"
 android:text="What beer are you having?"
 android:layout_gravity="center"
 android:textSize="20sp"
+android:visibility="gone"
 >
 </TextView>
 <AutoCompleteTextView
@@ -21,7 +23,7 @@ android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:layout_gravity="center"
 android:textSize="20sp"
-android:hint="Beer Name"
+android:hint="Potent Potable Message"
 android:width="400dp"
 >
 </AutoCompleteTextView>
@@ -32,7 +34,7 @@ android:onClick="surfaceClicked"
 android:layout_weight = "1"
 >
 </SurfaceView>
-<Button
+<ImageButton
 android:id="@+id/goButton"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
@@ -42,8 +44,9 @@ android:text="Go"
 android:width="100dp"
 android:onClick="goClicked"
 android:visibility="gone"
+android:src="@drawable/ic_menu_camera"
 >
-</Button>
+</ImageButton>
 <LinearLayout
 android:id="@+id/linearLayoutBottom"
 android:layout_width="fill_parent"

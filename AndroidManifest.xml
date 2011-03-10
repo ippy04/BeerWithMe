@@ -16,6 +16,7 @@
 		</activity>
 		<activity android:name=".whatBeer" android:theme="@android:style/Theme.NoTitleBar"/>
 		<activity android:name=".shareWith" android:theme="@android:style/Theme.NoTitleBar"/>
+		<activity android:name="com.tools.DialogWithInputBox"/>
 
 	</application>
 </manifest> 

@@ -2,8 +2,12 @@
 <resources>
     
     <string name="app_name">Beer With me</string>
-<string name="beersReviewed">Beers Reviewed:</string>
-<string name="enjoyString">Enjoying a beer? Snap a picture, and share it with a friend!</string>
+<string name="beersReviewed">Beers Shared:</string>
+<string name="enjoyString">Enjoying a beer? Snap a picture and share it with a friend!</string>
 <string name="shareString">Share my Beer!</string>
 <string name="disclaimer">*You must be 21 years or older to use this app. Please drink resposibly.</string>
+
+
+<color name="listViewColor">#3C0E00</color>
+
 </resources>

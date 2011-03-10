@@ -24,6 +24,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -44,7 +45,7 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 
 	// pointers to layout objects
 	private Button mKeepButton; 
-	private Button mGoButton;
+	private ImageButton mGoButton;
 	private Button mRetakeButton;
 	private LinearLayout mBottomLinearLayout;
 	private AutoCompleteTextView mBeerNameView;
@@ -73,7 +74,7 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		
 		// grab pointers to objects
 		mKeepButton = (Button) findViewById(R.id.keepButton);
-		mGoButton = (Button) findViewById(R.id.goButton);
+		mGoButton = (ImageButton) findViewById(R.id.goButton);
 		mRetakeButton = (Button) findViewById(R.id.retakeButton);
 		mBottomLinearLayout = (LinearLayout) findViewById(R.id.linearLayoutBottom);
 		mBeerNameView = (AutoCompleteTextView) findViewById(R.id.beerName);
@@ -82,9 +83,14 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 	/** Called when the camera viewing surface is clicked and auto focuses */
 	public void surfaceClicked(View view){
 		//TODO: auto focus on the correct spot instead of just the center
-		mGoButton.setEnabled(false);
-		mCamera.cancelAutoFocus();
-		mCamera.autoFocus(myAutoFocusCallback);
+		
+		// hide the keyboard if it's up
+		com.tools.Tools.hideKeyboard(this, mBeerNameView);
+		
+		// autofocus
+	//	mGoButton.setEnabled(false);
+	//	mCamera.cancelAutoFocus();
+	//	mCamera.autoFocus(myAutoFocusCallback);
 	}
 
 	/** Simple autofocus callback that re-enables 
@@ -124,8 +130,11 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 
 	/** create and launch intent to start next window and store beer name */
 	private void launchShareWith(){
+		// store beer message in app data
+		((BeerWithMeApp)getApplicationContext()).setBeerMessage(mBeerNameView.getText().toString());
+		
+		// launch next window
 		Intent i = new Intent(mCtx, shareWith.class);
-		i.putExtra(whatBeer.EXTRAS_BEER_NAME, mBeerNameView.getText().toString());
 		startActivityForResult(i, SHARE_WITH);
 	}
 
@@ -161,8 +170,9 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 			if (data != null) {
 
 				// store camera data in global app data
-				BeerWithMeApp appState = (BeerWithMeApp) getApplicationContext();
-				appState.camBytes = data;
+				//BeerWithMeApp appState = (BeerWithMeApp) getApplicationContext();
+				//appState.camBytes = data;
+				BeerWithMeApp.camBytes = data;
 
 				// switch views for buttons
 				mGoButton.setVisibility(Button.GONE);

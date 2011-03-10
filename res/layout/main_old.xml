@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout 
+<RelativeLayout 
 xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
 	android:layout_gravity="center"
 	android:id="@+id/main"
-	android:orientation="vertical"
 	android:background="@drawable/backrepeat"
 	>
 <TextView 
@@ -14,7 +13,6 @@ android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:text="Beer Messenger"
 android:layout_centerHorizontal="true"
-android:layout_gravity="center"
 android:textSize="25sp"
 ></TextView>
 <TextView 
@@ -24,33 +22,29 @@ android:layout_height="wrap_content"
 android:text="@string/enjoyString"
 android:layout_below="@+id/appName"
 android:textSize="20sp"
-android:layout_gravity="center"
-android:gravity="center"
 ></TextView>
 <ImageView 
 android:id="@+id/mainIcon" 
-android:layout_width="fill_parent" 
-android:layout_height="0px"
+android:layout_width="wrap_content" 
+android:layout_height="wrap_content"
 android:adjustViewBounds="true"
 android:layout_centerHorizontal="true"
 android:layout_below="@+id/enjoyText"
-android:layout_weight="1"
 ></ImageView>
 <LinearLayout
 android:id="@+id/linearLayout1"
+android:layout_below="@+id/mainIcon"
 android:orientation="horizontal"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:layout_marginTop="20dp"
 android:layout_centerHorizontal="true"
-android:layout_gravity="center"
 >
 <TextView 
 android:id="@+id/beersReivewedText" 
 android:layout_width="wrap_content" 
 android:layout_height="wrap_content"
 android:text="@string/beersReviewed"
-android:textSize="18sp"
 ></TextView>
 <TextView 
 android:id="@+id/beersReivewedNumber" 
@@ -58,37 +52,35 @@ android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:text="0"
 android:layout_marginLeft="20dp"
-android:textSize="18sp"
 ></TextView>
 </LinearLayout>
 <Button
 android:id="@+id/shareButton"
+android:layout_below="@+id/linearLayout1"
 android:text="@string/shareString"
 android:layout_width="wrap_content" 
 android:layout_height="wrap_content"
 android:layout_centerHorizontal="true"
 android:shadowRadius="10"
 android:onClick="shareClicked"
-android:textSize="18sp"
-android:layout_gravity="center"
 ></Button>
 <TextView
 android:id="@+id/beerQuote"
+android:layout_above="@+id/disclaimerText"
 android:layout_width="wrap_content" 
 android:layout_height="wrap_content"
 android:layout_centerHorizontal="true"
 android:typeface="serif"
 android:textSize="20sp"
-android:text="Alcohol, the cause and solution to all of life's problems. -Homer Simpson-"
-android:layout_gravity="center"
-android:gravity="center"
-></TextView>
+android:text="Alcohol, the cause and solution to all of life's problems. -Homer Simpson-">
+</TextView>
 <TextView 
 android:id="@+id/disclaimerText" 
 android:layout_width="wrap_content" 
 android:layout_height="wrap_content"
 android:text="@string/disclaimer"
+android:layout_alignParentBottom="true"
 android:textColor="@android:color/black"
 ></TextView>
-</LinearLayout>
+</RelativeLayout>
 

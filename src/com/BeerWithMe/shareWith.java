@@ -16,16 +16,22 @@ import com.tools.*;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
+import android.provider.ContactsContract.Contacts;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -39,18 +45,24 @@ public class shareWith extends ListActivity {
 
 	android.hardware.Camera mCamera = null;
 	byte[] mPicData;
-	private String mUserId="2";
-	private String mTargetNumber = "3109800919";
+	private String mUserId;
+	private String mTargetNumber;
 	private String mAvatarFileName = "testing.png";
-	private String mBeerName = null;
 	private String mMessage = "Drink up Bitches!!";
-	private String mUrl = "beerwithme.heroku.com/beer_pics.xml";
+	private String mFriendsName;
+	private String mUrl = "beerwithme.heroku.com/new_beer_pic.xml";
 	private Context mCtx = this;
 	private Activity mAct = this;
 	private Boolean mImagePosted = false;
 	private Cursor mNamesCursor = null;
 	private int mTypeColumn;
 	private Boolean mIsNameFormatted = false;
+	private String mSecret = null;
+	private String mUserName = null;
+	private int mSelectedNameColor = Color.MAGENTA;
+	private int mStandardColor = Color.WHITE;
+	private static final int NEW_CONTACT_ID = Menu.FIRST;
+	private static final int CREATE_CONTACT_REQUEST = 0;
 
 	private EditText mSearchNameObj;
 
@@ -59,36 +71,32 @@ public class shareWith extends ListActivity {
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.sharewith);
+		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-		// try to grab data from global variable
-		BeerWithMeApp appState = (BeerWithMeApp) getApplicationContext();
-		mPicData = appState.camBytes;
-
-		// grab extras that were passed into this intent
-		Bundle extras = getIntent().getExtras();
-		if (extras != null) {
-			mBeerName = extras.getString(whatBeer.EXTRAS_BEER_NAME);
-
-			// check null pointers
-			if (mBeerName==null){
-				mBeerName = "Null Beer Name - Should not happen";
-				Log.d("shareWithDebug", "Passed beer name should not be null, please pass correctly from whatBeer");
-			}
-			if (mPicData==null)
-				Log.d("shareWithDebug","mPicData should not be null, please pass correctly from whatBeer");
-		}else{
-			Log.d("shareWithDebug", "shareWith was not passed any extras with the intent... This should not happen");
-		}
+		// grab pick data from global variable
+		mPicData = BeerWithMeApp.camBytes;
+		
+		// grab user ID and beer message from global variable and password and name
+		BeerWithMeApp app = (BeerWithMeApp) getApplicationContext();
+		mMessage = app.getBeerMessage();
+		mUserId = app.getUserID();
+		mSecret = app.getSecret();
+		mUserName = app.getUserName();
 
 		// error checking
-		if (mBeerName==null){
-			mBeerName = "Null Beer Name - Should not happen";
-			Log.d("shareWithDebug", "Passed beer name should not be null, please pass correctly from whatBeer");
+		if (mMessage==null){
+			mMessage = "Null Beer Message - Should not happen";
+			Log.d("shareWithDebug", "Passed beer message should not be null, please pass correctly from whatBeer");
+		}
+		
+		if (mUserId==null){
+			mUserId = "Null userId - Should not happen";
+			Log.d("shareWithDebug", "Passed userId should not be null, please pass correctly from whatBeer");
 		}
 
 		// no beer name, so fill with no beer entered!!
-		if (mBeerName.length()==0)
-			mBeerName = "No Beer Entered!!!";
+		if (mMessage.length()==0)
+			mMessage = "No Message... So Let's drink up!!!";
 
 		// grab handles to objects
 		mSearchNameObj = (EditText) this.findViewById(R.id.searchName);
@@ -102,6 +110,7 @@ public class shareWith extends ListActivity {
 					
 					// clear text
 					mSearchNameObj.setText("");
+					//mSearchNameObj.setBackgroundColor(mStandardColor);
 					
 					// once we clear it, then it is no longer formatted
 					mIsNameFormatted = false;
@@ -127,17 +136,18 @@ public class shareWith extends ListActivity {
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count,
 					int after) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before,
 					int count) {
-				// TODO Auto-generated method stub
 
 			}
 		});
+		
+		// save file locally
+		saveFileUsingAsync();
 		
 		// find cursor to contacts and fill in list
 		findNameCursor();
@@ -153,10 +163,11 @@ public class shareWith extends ListActivity {
 		phone = com.tools.Tools.formatPhoneNumber(phone);
 
 		//"Name" <123-456-7890>
-		String formattedString = "\""+selectedName+"\" <"+phone+">";
+		String formattedString = "To: \""+selectedName+"\" <"+phone+">";
 
 		// send string to edit box
 		mSearchNameObj.setText(formattedString);
+		//mSearchNameObj.setBackgroundColor(mSelectedNameColor);
 		mIsNameFormatted = true;
 	}
 	
@@ -174,7 +185,9 @@ public class shareWith extends ListActivity {
 
 		// send string to edit box
 		mSearchNameObj.setText(formattedString);
+		//mSearchNameObj.setBackgroundColor(mSelectedNameColor);
 		mIsNameFormatted = true;
+		
 	}
 
 	public void goClicked1(View view){
@@ -182,22 +195,52 @@ public class shareWith extends ListActivity {
 		//TODO: should not be posting data with this button click
 
 		// testing save to file
-		SuccessReason success = Tools.saveByteDataToFile(this, mPicData, mBeerName, false);
+		/*
+		SuccessReason success = Tools.saveByteDataToFile(this, mPicData, mMessage, false);
 		if (success.getSuccess())
 			Toast.makeText(this, "File Saved Locally", Toast.LENGTH_SHORT).show();
 		else
 			Toast.makeText(this, "File NOT Saved Locally due to "+success.getReason(), Toast.LENGTH_LONG).show();
+			*/
 
 		// grab phone number and name
 		String nameAndNumberText = mSearchNameObj.getText().toString();
 		TwoObjects<String, String> nameAndNumberParsed = parseNumber(nameAndNumberText);
-		mTargetNumber = nameAndNumberParsed.mObject1;
-		String name = nameAndNumberParsed.mObject2;
+		mTargetNumber = com.tools.Tools.keepOnlyNumerics(nameAndNumberParsed.mObject2);
+		mFriendsName = nameAndNumberParsed.mObject1;
 		
 		// post data
 		postDataUsingAsync();	 
 	}
+	
+	private void saveFileUsingAsync(){
+		new saveFileTask().execute();
+	}
 
+	/** Asynctask for saving image to file */
+	private class saveFileTask extends AsyncTask<Void, Void, SuccessReason>{
+
+		@Override
+		protected void onPreExecute() {
+			Toast.makeText(mCtx, "Saving Image", Toast.LENGTH_SHORT).show();
+		}
+
+		@Override
+		protected SuccessReason doInBackground(Void... arg0) {
+
+			return Tools.saveByteDataToFile(mAct, mPicData, mMessage, false);
+		}
+
+		@Override
+		protected void onPostExecute(SuccessReason result) {
+			if (result.getSuccess()){
+				Toast.makeText(mCtx, "Image Saved Locally", Toast.LENGTH_SHORT).show();
+			}else{
+				Toast.makeText(mCtx, "File NOT Saved Locally due to "+result.getReason(), Toast.LENGTH_LONG).show();
+			}
+		}
+	}
+	
 	public void goClicked2(View view){
 
 	}
@@ -254,14 +297,15 @@ public class shareWith extends ListActivity {
 
 			// the result if successful or not
 			Boolean result = true;
-
+			
 			// xml String to post to server
 			String xml = "POST -d <?xml version='1.0' encoding='UTF-8'?>" +
-			"<beer_pic><user_id>"+mUserId+"</user_id><avatar type='String'>" +
+			"<beer_pic><user><phone_number>"+mUserId+"</phone_number><password>"+
+			mSecret+"</password></user><avatar type='String'>" +
 			Base64.encodeToString(mPicData, Base64.DEFAULT) +
 			"</avatar><avatar_file_name>"+mAvatarFileName+"</avatar_file_name>" +
 			"<target_number>"+mTargetNumber+"</target_number>" +
-			"<message>"+mBeerName+"</message></beer_pic> " +
+			"<message>"+mMessage+"</message></beer_pic> " +
 			"-H \"Content-Type: text/xml\"  "+mUrl;
 
 			// default response
@@ -313,6 +357,7 @@ public class shareWith extends ListActivity {
 		protected void onPostExecute(SuccessReason result) {
 			if (result.getSuccess()){
 				Toast.makeText(mCtx, "Image Sent Successfully", Toast.LENGTH_SHORT).show();
+				((BeerWithMeApp)mCtx.getApplicationContext()).addBeer(1);
 			}else{
 				Toast.makeText(mCtx, "Image Could Not be Posted because "+result.getReason(), Toast.LENGTH_LONG).show();
 			}
@@ -340,7 +385,7 @@ public class shareWith extends ListActivity {
 		// Now create a simple cursor adapter and set it to display
 		mTypeColumn = mNamesCursor.getColumnIndex(CommonDataKinds.Phone.TYPE);
 		SimpleCursorAdapter notes = 
-			new SimpleCursorAdapter(this, R.layout.notes_row, mNamesCursor, from, to);
+			new SimpleCursorAdapter(mCtx, R.layout.notes_row, mNamesCursor, from, to);
 		setListAdapter(notes);
 		notes.setViewBinder(new CustomDataViewBinder());
 	}
@@ -428,4 +473,36 @@ public class shareWith extends ListActivity {
 		// grab cursor from search result
 		mNamesCursor = mAct.managedQuery(uri, null, selection, null, sortOrder);
 	}
+	
+	@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        menu.add(0, NEW_CONTACT_ID, 0, "Create New Contact");
+        return true;
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        switch(item.getItemId()) {
+            case NEW_CONTACT_ID:
+        		Intent intent = new Intent(Intent.ACTION_INSERT,ContactsContract.Contacts.CONTENT_URI); 
+        		this.startActivityForResult(intent, CREATE_CONTACT_REQUEST); 
+        		return true;
+        }
+
+        return super.onMenuItemSelected(featureId, item);
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        
+        switch(requestCode){
+        case CREATE_CONTACT_REQUEST:
+        	if (resultCode==RESULT_OK){
+        		int kyle = 6;
+        		return;        	
+        	}
+        }
+    }
 }

@@ -11,14 +11,16 @@
 
 		<TextView android:id="@+id/text1" android:layout_width="wrap_content"
 			android:layout_height="wrap_content" android:textSize="15sp"
-			android:textStyle="bold" android:lines="1" android:text="line1"/>
+			android:textStyle="bold" android:lines="1" android:text="line1"
+			android:textColor="@android:color/white"/>
 		<TextView android:id="@+id/text2" android:layout_width="wrap_content"
 			android:layout_height="wrap_content" android:textSize="15sp"
-			android:textStyle="bold" android:lines="1" android:text="line2"/>
+			android:textStyle="bold" android:lines="1" android:text="line2"
+			android:textColor="@android:color/white"/>
 	</LinearLayout>
 	<TextView android:id="@+id/text3" android:layout_width="wrap_content"
 		android:layout_weight=".2" android:layout_height="fill_parent"
 		android:textSize="10sp" android:textStyle="italic" android:lines="1" android:text="line3"
-		android:layout_alignParentRight="true"/>
+		android:layout_alignParentRight="true" android:textColor="@android:color/white"/>
 
 </RelativeLayout>
