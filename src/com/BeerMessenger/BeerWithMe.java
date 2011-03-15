@@ -1,6 +1,7 @@
 package com.BeerMessenger;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
@@ -26,6 +27,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.method.DigitsKeyListener;
 import android.util.Log;
 import android.view.View;
@@ -249,13 +251,16 @@ public class BeerWithMe extends Activity {
 	    	} catch (ClientProtocolException e1) {
 	    	} catch (IOException e1) {
 	    	}
-
+	    		
 	    	// check for null response
 	    	if (response==null)
 	    		return response;
 
 	    	// extract beer quote
-	    	return com.tools.Tools.getXmlValueAtTag(response, "beer-quote");
+	    	response = com.tools.Tools.getXmlValueAtTag(response, "beer-quote");
+	    	
+	    	// convert html to string
+	    	return android.text.Html.fromHtml(response).toString();
 		}
 
 		// do nothing
