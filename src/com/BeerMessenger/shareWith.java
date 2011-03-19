@@ -71,6 +71,7 @@ public class shareWith extends ListActivity {
 	private int mMaxPostAttempts = 3;
 	private String mBaseUrl = "beermessenger.com";
 	private String mPictureUrl;
+	private String typeOfPictureResize = "blackBars";
 
 	private EditText mSearchNameObj;
 
@@ -259,6 +260,10 @@ public class shareWith extends ListActivity {
 		@Override
 		protected SuccessReason doInBackground(Void... arg0) {
 
+			// resize picture first
+			mPicData = com.tools.Tools.resizeByteArray(mPicData, whatBeer.mOptimalWidthHeight, typeOfPictureResize);
+			
+			// save the data
 			return Tools.saveByteDataToFile(mAct, mPicData, mMessage, false);
 		}
 
@@ -490,6 +495,13 @@ public class shareWith extends ListActivity {
 		String name = input.substring(0, first);
 		name = name.replace("\"", "");
 		name = name.trim();
+		
+		// remove To: at beginning of name
+		int toIndex = name.indexOf("To: ");
+		if (toIndex == 0)
+			name = name.substring(4);
+		
+		// return data
 		return new TwoObjects<String, String>(name, 
 				com.tools.Tools.formatPhoneNumber(input.substring(first+1, second)));
 	}

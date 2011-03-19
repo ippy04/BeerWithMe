@@ -40,8 +40,8 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 	private Boolean mPreviewRunning = false;						// boolean if the camera is currently running
 	private Context mCtx = this;									// Context for this activity
 	private Boolean mTryingToTakePicture = false;					// boolean used by autofocus callback
-	private WidthHeight mMaxWidthHeight = new WidthHeight(600, 600);
-	private WidthHeight mOptimalWidthHeight = new WidthHeight(400, 400);
+	protected static final WidthHeight mMaxWidthHeight = new WidthHeight(3000, 3000);
+	protected static final WidthHeight mOptimalWidthHeight = new WidthHeight(400, 400);
 
 	// pointers to layout objects
 	private Button mKeepButton; 
@@ -224,7 +224,8 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 			WidthHeight bestWidthHeight = 
 				getBestWidthHeight(sizes, mMaxWidthHeight, mOptimalWidthHeight);
 			if (bestWidthHeight == null){
-				Toast.makeText(this, "Could not find a good camera size", Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, "Could not find a good camera size...Quitting", Toast.LENGTH_SHORT).show();
+				finish();
 			}else{
 				params.setPictureSize(bestWidthHeight.width, bestWidthHeight.height);
 			}
@@ -294,7 +295,9 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		ArrayList <Size> belowMax = new ArrayList<Size>();
 		for (Iterator<Size> it = sizes.iterator (); it.hasNext();) {
 		    Size s = it.next ();
-		    if (s.width <= maxWH.width && s.height <= maxWH.height)
+		    if (maxWH == null)
+		    	belowMax.add(s);
+		    else if (s.width <= maxWH.width && s.height <= maxWH.height)
 		    	belowMax.add(s);
 		}
 		
