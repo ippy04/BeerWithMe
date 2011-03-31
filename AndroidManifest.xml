@@ -8,7 +8,7 @@
 	<uses-feature android:name="android.hardware.camera.autofocus" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 		<uses-permission android:name="android.permission.SEND_SMS"/>
-	<application android:name=".BeerWithMeApp" android:label="@string/app_name"  android:debuggable="false" android:icon="@drawable/beer_messenger_icon">
+	<application android:name=".BeerWithMeApp" android:label="@string/app_name"  android:debuggable="true" android:icon="@drawable/beer_messenger_icon">
 		<activity android:name=".BeerWithMe" android:label="@string/app_name" android:theme="@android:style/Theme.NoTitleBar">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
@@ -18,6 +18,7 @@
 		<activity android:name=".whatBeer" android:theme="@android:style/Theme.NoTitleBar"/>
 		<activity android:name=".shareWith" android:theme="@android:style/Theme.NoTitleBar"/>
 		<activity android:name="com.tools.DialogWithInputBox"/>
+		<activity android:name=".PictureGallery" android:theme="@android:style/Theme.NoTitleBar"/>
 
 	</application>
 </manifest> 

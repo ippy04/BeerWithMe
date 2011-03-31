@@ -38,6 +38,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -69,11 +70,14 @@ public class shareWith extends ListActivity {
 	private static final int CREATE_CONTACT_REQUEST = 0;
 	private int mPostAttempts = 0;
 	private int mMaxPostAttempts = 3;
-	private String mBaseUrl = "beermessenger.com";
+	private String mBaseUrl = "http://beermessenger.com";
 	private String mPictureUrl;
 	private String typeOfPictureResize = "blackBars";
+	private PictureInfoDbHelper mDbHelper;
+	private String mPictureFileName = "";
 
 	private EditText mSearchNameObj;
+	private Button mGoButton;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -91,6 +95,10 @@ public class shareWith extends ListActivity {
 		mUserId = app.getUserID();
 		mSecret = app.getSecret();
 		mUserName = app.getUserName();
+		
+		// open up database for storing picture info
+		mDbHelper = new PictureInfoDbHelper(this);
+        mDbHelper.open();
 
 		// error checking
 		if (mMessage==null){
@@ -109,6 +117,7 @@ public class shareWith extends ListActivity {
 
 		// grab handles to objects
 		mSearchNameObj = (EditText) this.findViewById(R.id.searchName);
+		mGoButton = (Button) findViewById(R.id.goButton1);
 		
 		// add touch listener
 		mSearchNameObj.setOnTouchListener(new OnTouchListener()
@@ -261,16 +270,17 @@ public class shareWith extends ListActivity {
 		protected SuccessReason doInBackground(Void... arg0) {
 
 			// resize picture first
-			mPicData = com.tools.Tools.resizeByteArray(mPicData, whatBeer.mOptimalWidthHeight, typeOfPictureResize);
+			mPicData = com.tools.Tools.resizeByteArray(mPicData, whatBeer.mOptimalWidthHeight, typeOfPictureResize, mAct);
 			
 			// save the data
-			return Tools.saveByteDataToFile(mAct, mPicData, mMessage, false);
+			return Tools.saveByteDataToFile(mAct, mPicData, mMessage, false, null);
 		}
 
 		@Override
 		protected void onPostExecute(SuccessReason result) {
 			if (result.getSuccess()){
 				Toast.makeText(mCtx, "Image Saved Locally", Toast.LENGTH_SHORT).show();
+				mPictureFileName = result.getReason();
 			}else{
 				Toast.makeText(mCtx, "File NOT Saved Locally due to "+result.getReason(), Toast.LENGTH_LONG).show();
 			}
@@ -321,10 +331,18 @@ public class shareWith extends ListActivity {
 
 		@Override
 		protected void onPreExecute() {
+			// hide keyboard
+			com.tools.Tools.hideKeyboard(mCtx, mSearchNameObj);
+			
+			// show sending message
 			if (mPostAttempts == 0)
-				Toast.makeText(mCtx, "Sending Image", Toast.LENGTH_LONG).show();
-			else
-				Toast.makeText(mCtx, "Sending Image Attempt #"+(mPostAttempts+1)+" of "+mMaxPostAttempts, Toast.LENGTH_LONG).show();
+				Toast.makeText(mCtx, "Sending Image", Toast.LENGTH_SHORT).show();
+		//	else
+		//		Toast.makeText(mCtx, "Sending Image Attempt #"+(mPostAttempts+1)+" of "+mMaxPostAttempts, Toast.LENGTH_LONG).show();
+			
+			// make go button gray as to not allow multiple sends
+			mSearchNameObj.setEnabled(false);
+			mGoButton.setEnabled(false);
 		}
 
 		@Override
@@ -398,20 +416,26 @@ public class shareWith extends ListActivity {
 
 		@Override
 		protected void onPostExecute(SuccessReason result) {
+			mPostAttempts++;
 			if (result.getSuccess()){
 				Toast.makeText(mCtx, "Image Sent Successfully", Toast.LENGTH_SHORT).show();
 				((BeerWithMeApp)mCtx.getApplicationContext()).addBeer(1);
-			}else{
+			}else if (mPostAttempts == mMaxPostAttempts){
 				Toast.makeText(mCtx, "Image Could Not be Posted because "+result.getReason(), Toast.LENGTH_LONG).show();
 			}
 			mImagePosted = result.getSuccess();
-			mPostAttempts++;
+			
 			
 			// failed post, so try again, but only three times
 			if (!mImagePosted & mPostAttempts < mMaxPostAttempts)
 				postDataUsingAsync();
-			else
+			else{
 				mPostAttempts = 0;
+				
+				// make go button back to active
+				mSearchNameObj.setEnabled(true);
+				mGoButton.setEnabled(true);
+			}
 			
 			//send text message if we successfully posted
 			if (mImagePosted){
@@ -420,14 +444,32 @@ public class shareWith extends ListActivity {
 					intro = "";
 				else
 					intro = "Hey "+mFriendsName+", ";
-				sendSMS(mTargetNumber, intro+mUserName+
-						" sent you a BeerMessenger Pic. Share a beer and view the picture at "+
-						mPictureUrl);
-			}
+				//sendSMS(mTargetNumber, intro+mUserName+
+				//		" sent you a BeerMessenger Pic. Share a beer and view the picture at "+
+				//		mPictureUrl);
+				//sendSMS(mTargetNumber, intro+
+				//		"I'm drinking a beer, take a look at it here: "+mPictureUrl+
+				//		" Drink one with me and send a pic back.");
+				sendSMS(mTargetNumber, intro+
+						mMessage + " I'm drinking a beer, take a look at it here: "+mPictureUrl);
 				
+				// save database info
+				postToDatabase();
+			}
+			
+			// Successful quit and go back to homescreen
+			if (result.getSuccess()){
+				setResult(RESULT_OK);
+				finish();
+			}
 		}
 	}
 
+	/** Save picture data to database */
+	void postToDatabase(){
+		long id = mDbHelper.createPicture(mPictureFileName, mMessage, mPictureUrl, mFriendsName, mTargetNumber, mUserName);
+	}
+	
 	// post data to server
 	public void postDataUsingAsync(){
 		new postDataTask().execute();

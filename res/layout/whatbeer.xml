@@ -31,6 +31,7 @@ android:width="400dp"
 android:layout_width="fill_parent"
 android:layout_height="10dip"
 android:onClick="surfaceClicked"
+android:layout_gravity="center_horizontal"
 android:layout_weight = "1"
 >
 </SurfaceView>

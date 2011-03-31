@@ -15,6 +15,7 @@ public class BeerWithMeApp extends Application {
 	protected static final String USER_NAME = "userName";
 	protected static final String ALLOW_POSTS = "allowPosts";
 	protected static final String BEER_QUOTE = "beerQuote";
+	protected static final String PICTURE_INFO = "pictureInfo";
 	
 	protected void setUserID(String user){
 		SharedPreferences mSettings = getSharedPreferences(PREF_FILE, MODE_PRIVATE);

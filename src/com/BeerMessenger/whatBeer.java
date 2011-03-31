@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.http.RequestLine;
+
 import com.tools.*;
 
 import android.app.Activity;
@@ -15,13 +17,15 @@ import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Size;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.ViewParent;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -49,11 +53,19 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 	private Button mRetakeButton;
 	private LinearLayout mBottomLinearLayout;
 	private AutoCompleteTextView mBeerNameView;
+	
+	// orientation helper
+	private RotateCameraSurface mRotateHelper;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		//TODO:make surface creation more optimal
 		super.onCreate(savedInstanceState);
+
+		// class for keeping camera orientated properly, and force to stay in landscape
+		mRotateHelper = new RotateCameraSurface(this, null);
+		mRotateHelper.onCreate();
 
 		// setup surface for holding camera
 		try{
@@ -80,6 +92,17 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		mBeerNameView = (AutoCompleteTextView) findViewById(R.id.beerName);
 	}
 
+	@Override 
+	protected void onResume() {
+	    super.onResume();
+	    mRotateHelper.onResume();
+	}
+
+	@Override protected void onPause() {
+	    super.onPause();
+	    mRotateHelper.onPause();
+	}
+	
 	/** Called when the camera viewing surface is clicked and auto focuses */
 	public void surfaceClicked(View view){
 		//TODO: auto focus on the correct spot instead of just the center
@@ -126,6 +149,14 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		
+		switch(requestCode){
+		case SHARE_WITH:
+			// just finish if we got back a good result
+			if (resultCode == RESULT_OK)
+				finish();
+		}
+		
 	}
 
 	/** create and launch intent to start next window and store beer name */
@@ -209,9 +240,7 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		// set parameters
 		try{
 			// set orientation
-			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 			mCamera.setDisplayOrientation(90);
-			params.setRotation(90);
 			
 			// turn on flash
 			params.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
@@ -237,9 +266,17 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 			// determine how best to fit camera preview into surface
 			if (bestWidthHeightPreivew != null){
 				params.setPreviewSize(bestWidthHeightPreivew.width, bestWidthHeightPreivew.height);
-				WidthHeight fitWindowWidthHeight = Tools.fitNoCrop(bestWidthHeightPreivew, new WidthHeight(width, height));
 				SurfaceView mSurfaceView = (SurfaceView) findViewById(R.id.surface_camera);
-				mSurfaceView.setLayoutParams(new LinearLayout.LayoutParams(fitWindowWidthHeight.width, fitWindowWidthHeight.height, (float) 0.0));
+				int maxHeight = ((LinearLayout) mSurfaceView.getParent()).getHeight() - mBeerNameView.getHeight() - (mGoButton.getDrawable()).getIntrinsicHeight();
+				WidthHeight fitWindowWidthHeight = Tools.fitNoCrop(bestWidthHeightPreivew, 
+						new WidthHeight(Math.min(height, maxHeight), width));
+				
+				mSurfaceView.setLayoutParams(new LinearLayout.LayoutParams(fitWindowWidthHeight.height, 
+						fitWindowWidthHeight.width, 
+						(float) 0.0));		
+				LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(mSurfaceView.getLayoutParams());
+				p.gravity = Gravity.CENTER_HORIZONTAL;
+				mSurfaceView.setLayoutParams(p);
 			}
 			
 			// actually set the  parameters
@@ -255,7 +292,6 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 			mCamera.setPreviewDisplay(holder);
 
 		} catch (IOException e) {
-			Log.d("whatBeer", e.toString());
 			e.printStackTrace();
 		}
 
@@ -272,6 +308,7 @@ public class whatBeer extends Activity implements SurfaceHolder.Callback{
 		// create camera instance
 		try{
 			mCamera = android.hardware.Camera.open();
+			mRotateHelper.updateCam(mCamera);
 		}catch(Exception e){
 			e.printStackTrace();
 		}

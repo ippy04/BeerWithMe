@@ -24,47 +24,49 @@ public final class R {
         public static final int woodbackground=0x7f020007;
     }
     public static final class id {
-        public static final int addText=0x7f060015;
+        public static final int addText=0x7f060016;
         public static final int appName=0x7f060001;
-        public static final int beerName=0x7f06001c;
+        public static final int beerName=0x7f06001d;
         public static final int beerQuote=0x7f060008;
         public static final int beersReivewedNumber=0x7f060006;
         public static final int beersReivewedText=0x7f060005;
         public static final int disclaimerText=0x7f060009;
         public static final int enjoyText=0x7f060002;
-        public static final int firstName=0x7f060017;
-        public static final int goButton=0x7f06001e;
-        public static final int goButton1=0x7f060012;
-        public static final int goButton2=0x7f060019;
-        public static final int keepButton=0x7f060020;
-        public static final int line1=0x7f060010;
-        public static final int line2=0x7f060014;
+        public static final int firstName=0x7f060018;
+        public static final int goButton=0x7f06001f;
+        public static final int goButton1=0x7f060013;
+        public static final int goButton2=0x7f06001a;
+        public static final int keepButton=0x7f060021;
+        public static final int line1=0x7f060011;
+        public static final int line2=0x7f060015;
         public static final int linearLayout1=0x7f060004;
         public static final int linearLayout2=0x7f06000a;
-        public static final int linearLayoutBottom=0x7f06001f;
+        public static final int linearLayoutBottom=0x7f060020;
+        public static final int linearPicture=0x7f06000e;
         public static final int main=0x7f060000;
         public static final int mainIcon=0x7f060003;
-        public static final int orText=0x7f060013;
-        public static final int phoneNumber=0x7f060018;
-        public static final int retakeButton=0x7f060021;
-        public static final int row1=0x7f060016;
-        public static final int searchName=0x7f060011;
+        public static final int orText=0x7f060014;
+        public static final int phoneNumber=0x7f060019;
+        public static final int retakeButton=0x7f060022;
+        public static final int row1=0x7f060017;
+        public static final int searchName=0x7f060012;
         public static final int shareButton=0x7f060007;
-        public static final int shareWithXml=0x7f06000e;
-        public static final int surface_camera=0x7f06001d;
+        public static final int shareWithXml=0x7f06000f;
+        public static final int surface_camera=0x7f06001e;
         public static final int text1=0x7f06000b;
         public static final int text2=0x7f06000c;
         public static final int text3=0x7f06000d;
-        public static final int whatBeerText=0x7f06001b;
-        public static final int whatBeerXml=0x7f06001a;
-        public static final int whoText=0x7f06000f;
+        public static final int whatBeerText=0x7f06001c;
+        public static final int whatBeerXml=0x7f06001b;
+        public static final int whoText=0x7f060010;
     }
     public static final class layout {
         public static final int main=0x7f030000;
         public static final int main_old=0x7f030001;
         public static final int notes_row=0x7f030002;
-        public static final int sharewith=0x7f030003;
-        public static final int whatbeer=0x7f030004;
+        public static final int picturegallery=0x7f030003;
+        public static final int sharewith=0x7f030004;
+        public static final int whatbeer=0x7f030005;
     }
     public static final class string {
         public static final int app_name=0x7f040000;
@@ -73,4 +75,25 @@ public final class R {
         public static final int enjoyString=0x7f040002;
         public static final int shareString=0x7f040003;
     }
+    public static final class styleable {
+        /** Attributes that can be used with a GalleryTheme.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #GalleryTheme_android_galleryItemBackground com.BeerMessenger:android_galleryItemBackground}</code></td><td></td></tr>
+           </table>
+           @see #GalleryTheme_android_galleryItemBackground
+         */
+        public static final int[] GalleryTheme = {
+            0x0101004c
+        };
+        /**
+          <p>This symbol is the offset where the {@link com.BeerMessenger.R.attr#android_galleryItemBackground}
+          attribute's value can be found in the {@link #GalleryTheme} array.
+          @attr name android:android_galleryItemBackground
+        */
+        public static final int GalleryTheme_android_galleryItemBackground = 0;
+    };
 }
